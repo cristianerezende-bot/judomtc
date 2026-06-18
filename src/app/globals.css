@@ -1,0 +1,20 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(180deg, #0b3c6f 0%, #041e3c 100%);
+  min-height: 100vh;
+  color: #fff;
+}
+
+.card {
+  @apply bg-white rounded-3xl border border-black/10 shadow-xl overflow-hidden;
+}
+
+.pill {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-black
+         bg-black/5 border border-black/10 text-slate-700;
+}
