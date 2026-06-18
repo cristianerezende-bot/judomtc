@@ -1,7 +1,10 @@
 import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 
-const allowedEmails = (process.env.ALLOWED_EMAILS ?? '').split(',').map(e => e.trim())
+const allowedEmails = (process.env.ALLOWED_EMAILS ?? '')
+  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+const allowedDomains = (process.env.ALLOWED_DOMAINS ?? '')
+  .split(',').map(d => d.trim().toLowerCase().replace(/^@/, '')).filter(Boolean)
 
 const handler = NextAuth({
   providers: [
@@ -12,7 +15,11 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ user }) {
-      return allowedEmails.includes(user.email ?? '')
+      const email = (user.email ?? '').toLowerCase()
+      if (!email) return false
+      if (allowedEmails.includes(email)) return true
+      const domain = email.split('@')[1] ?? ''
+      return allowedDomains.includes(domain)
     },
     async session({ session }) {
       return session
