@@ -47,17 +47,26 @@ interface SheetData {
   rows: string[][]
 }
 
-interface SpreadsheetData {
+const EMPTY_SHEET: SheetData = { headers: [], rows: [] }
+
+interface LightSpreadsheetData {
   roster: SheetData
   recHoje: SheetData
   pseHoje: SheetData
-  history: SheetData
   home: SheetData
 }
 
-// Leitura em lote (batch) de todas as abas necessárias em uma única requisição HTTP
-async function readSpreadsheetBatch(spreadsheetId: string): Promise<SpreadsheetData> {
-  const tabs = ['CACHE_ROSTER', 'CACHE_REC_HOJE', 'CACHE_PSE_HOJE', 'CACHE_ATLETA_HIST_30D', 'CACHE_HOME']
+function parseRange(values: string[][] | undefined | null): SheetData {
+  if (!values || values.length < 2) return { headers: [], rows: [] }
+  return {
+    headers: values[0].map(normH),
+    rows: values.slice(1).filter(r => r.some(c => c !== ''))
+  }
+}
+
+// Leitura em lote das abas "leves" (rapidas, sem formulas pesadas de historico)
+async function readLightSpreadsheet(spreadsheetId: string): Promise<LightSpreadsheetData> {
+  const tabs = ['CACHE_ROSTER', 'CACHE_REC_HOJE', 'CACHE_PSE_HOJE', 'CACHE_HOME']
   try {
     const sheets = google.sheets({ version: 'v4', auth: getAuth() })
     const res = await withTimeout(
@@ -66,38 +75,51 @@ async function readSpreadsheetBatch(spreadsheetId: string): Promise<SpreadsheetD
         ranges: tabs
       }),
       SHEETS_READ_TIMEOUT_MS,
-      `spreadsheet ${spreadsheetId}`
+      `spreadsheet ${spreadsheetId} (light)`
     )
     const valueRanges = res.data.valueRanges ?? []
-    
-    function parseRange(values: string[][] | undefined | null): SheetData {
-      if (!values || values.length < 2) return { headers: [], rows: [] }
-      return {
-        headers: values[0].map(normH),
-        rows: values.slice(1).filter(r => r.some(c => c !== ''))
-      }
-    }
-    
     return {
       roster: parseRange(valueRanges[0]?.values),
       recHoje: parseRange(valueRanges[1]?.values),
       pseHoje: parseRange(valueRanges[2]?.values),
-      history: parseRange(valueRanges[3]?.values),
-      home: parseRange(valueRanges[4]?.values)
+      home: parseRange(valueRanges[3]?.values)
     }
   } catch (err) {
-    console.error(`Erro ao ler batch do spreadsheet ${spreadsheetId}:`, err)
-    const empty = { headers: [] as string[], rows: [] as string[][] }
-    return { roster: empty, recHoje: empty, pseHoje: empty, history: empty, home: empty }
+    console.error(`Erro ao ler abas leves do spreadsheet ${spreadsheetId}:`, err)
+    return { roster: EMPTY_SHEET, recHoje: EMPTY_SHEET, pseHoje: EMPTY_SHEET, home: EMPTY_SHEET }
+  }
+}
+
+// Leitura isolada da aba pesada de historico (30 dias), para nao travar as abas leves
+// quando o calculo de formulas dessa aba estiver lento no Google Sheets.
+async function readHistorySheet(spreadsheetId: string): Promise<SheetData> {
+  try {
+    const sheets = google.sheets({ version: 'v4', auth: getAuth() })
+    const res = await withTimeout(
+      sheets.spreadsheets.values.get({ spreadsheetId, range: 'CACHE_ATLETA_HIST_30D' }),
+      SHEETS_READ_TIMEOUT_MS,
+      `spreadsheet ${spreadsheetId} (historico)`
+    )
+    return parseRange(res.data.values)
+  } catch (err) {
+    console.error(`Erro ao ler historico do spreadsheet ${spreadsheetId}:`, err)
+    return EMPTY_SHEET
   }
 }
 
 // Cache do Next.js de 5 minutos, limpável sob demanda via tag 'sheets'
-const getCachedSpreadsheet = unstable_cache(
-  async (spreadsheetId: string) => {
-    return readSpreadsheetBatch(spreadsheetId)
-  },
-  ['google-sheets-batch-data-v3'],
+const getCachedLightSpreadsheet = unstable_cache(
+  async (spreadsheetId: string) => readLightSpreadsheet(spreadsheetId),
+  ['google-sheets-light-v1'],
+  {
+    revalidate: 300,
+    tags: ['sheets']
+  }
+)
+
+const getCachedHistorySheet = unstable_cache(
+  async (spreadsheetId: string) => readHistorySheet(spreadsheetId),
+  ['google-sheets-history-v1'],
   {
     revalidate: 300,
     tags: ['sheets']
@@ -106,8 +128,8 @@ const getCachedSpreadsheet = unstable_cache(
 
 export async function getRoster(categoria?: string): Promise<RosterEntry[]> {
   const [data1, data2] = await Promise.all([
-    getCachedSpreadsheet(SS_PRIMARY),
-    getCachedSpreadsheet(SS_SECONDARY)
+    getCachedLightSpreadsheet(SS_PRIMARY),
+    getCachedLightSpreadsheet(SS_SECONDARY)
   ])
   
   function parseRoster(headers: string[], rows: string[][]) {
@@ -167,22 +189,22 @@ function processHistoryFromSheets(res1: SheetData, res2: SheetData): Record<stri
 }
 
 export async function getAllHistory(): Promise<Record<string, HistRow[]>> {
-  const [data1, data2] = await Promise.all([
-    getCachedSpreadsheet(SS_PRIMARY),
-    getCachedSpreadsheet(SS_SECONDARY)
+  const [hist1, hist2] = await Promise.all([
+    getCachedHistorySheet(SS_PRIMARY),
+    getCachedHistorySheet(SS_SECONDARY)
   ])
-  return processHistoryFromSheets(data1.history, data2.history)
+  return processHistoryFromSheets(hist1, hist2)
 }
 
 export async function getRecHoje(categoria?: string): Promise<RecRow[]> {
-  const [data1, data2] = await Promise.all([
-    getCachedSpreadsheet(SS_PRIMARY),
-    getCachedSpreadsheet(SS_SECONDARY)
+  const [data1, data2, histMap] = await Promise.all([
+    getCachedLightSpreadsheet(SS_PRIMARY),
+    getCachedLightSpreadsheet(SS_SECONDARY),
+    getAllHistory()
   ])
-  
+
   const res1 = data1.recHoje
   const res2 = data2.recHoje
-  const histMap = processHistoryFromSheets(data1.history, data2.history)
   
   function parseRec(headers: string[], rows: string[][]) {
     const iA = col(headers, ['ATLETA','NOME']), iP = col(headers, ['PSR']), iB = col(headers, ['BE','BEM_ESTAR']), iF = col(headers, ['FADIGA'])
@@ -233,8 +255,8 @@ export async function getRecHoje(categoria?: string): Promise<RecRow[]> {
 
 export async function getPseHoje(categoria?: string): Promise<PseRow[]> {
   const [data1, data2] = await Promise.all([
-    getCachedSpreadsheet(SS_PRIMARY),
-    getCachedSpreadsheet(SS_SECONDARY)
+    getCachedLightSpreadsheet(SS_PRIMARY),
+    getCachedLightSpreadsheet(SS_SECONDARY)
   ])
   
   const res1 = data1.pseHoje
@@ -270,8 +292,8 @@ export async function getPseHoje(categoria?: string): Promise<PseRow[]> {
 
 export async function getHomeData(categoria?: string): Promise<HomeData> {
   const [data1, data2] = await Promise.all([
-    getCachedSpreadsheet(SS_PRIMARY),
-    getCachedSpreadsheet(SS_SECONDARY)
+    getCachedLightSpreadsheet(SS_PRIMARY),
+    getCachedLightSpreadsheet(SS_SECONDARY)
   ])
   
   const res1 = data1.home
