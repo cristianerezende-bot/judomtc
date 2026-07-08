@@ -1,7 +1,7 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { getAtletaHist } from '@/lib/sheets'
-import { lastNDaysKeys, formatBr } from '@/lib/utils'
+import { lastNDaysKeys, formatBr, getTodaySpKey } from '@/lib/utils'
 import type { DayRow, Adherence, AthleteReport } from '@/types'
 
 export async function GET(req: NextRequest) {
@@ -49,11 +49,11 @@ export async function GET(req: NextRequest) {
     }
     const report: AthleteReport = {
       athlete: atleta, categoria: hist[0]?.categoria ?? '',
-      windowDays: 14, todayKey: new Date().toISOString().slice(0,10),
+      windowDays: 14, todayKey: getTodaySpKey(),
       dayKeys, rows, adherence,
     }
     return NextResponse.json(report, {
-      headers: { 'Cache-Control': 's-maxage=30, stale-while-revalidate=60' },
+      headers: { 'Cache-Control': 'no-store, must-revalidate' },
     })
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 })

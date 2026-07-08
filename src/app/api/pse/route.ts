@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { getRoster, getPseHoje } from '@/lib/sheets'
 import { normName } from '@/lib/utils'
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(
       { pseRows, pseMissingToday, kpis: { pseManhaOk, pseManhaFalt, pseTardeOk, pseTardeFalt } },
-      { headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=120' } }
+      { headers: { 'Cache-Control': 'no-store, must-revalidate' } }
     )
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 })

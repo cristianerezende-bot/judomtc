@@ -32,7 +32,7 @@ export default function AtletaPage() {
         ])
       ].sort((a: string, b: string) => a.localeCompare(b, 'pt-BR'))
       setRoster(names)
-      if (names.length && !selected) setSelected(names[0])
+      setSelected(prev => prev || names[0] || '')
     })
   }, [categoria])
 

@@ -3,12 +3,13 @@
   value: string | number
   meta?: string
   icon?: React.ReactNode
-  variant?: 'default' | 'good' | 'bad'
+  variant?: 'default' | 'good' | 'bad' | 'mid'
 }
 
 export default function KpiCard({ label, value, meta, icon, variant = 'default' }: Props) {
   const bg = variant === 'good' ? 'bg-emerald-50 border-emerald-200'
            : variant === 'bad'  ? 'bg-red-50 border-red-200'
+           : variant === 'mid'  ? 'bg-amber-50 border-amber-200'
            : 'bg-white border-black/10'
   return (
     <div className={`relative rounded-3xl border shadow-lg p-4 overflow-hidden ${bg}`}>

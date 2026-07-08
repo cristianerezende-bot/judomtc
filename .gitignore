@@ -8,3 +8,8 @@ out/
 next-env.d.ts
 
 .vercel
+sa.json
+memory/
+diag-sheets.js
+test-cache-pse.js
+test-cache-rec.js

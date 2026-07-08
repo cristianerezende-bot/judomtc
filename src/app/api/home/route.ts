@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { getHomeData } from '@/lib/sheets'
 
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     const data = await getHomeData(categoria)
     return NextResponse.json(data, {
-      headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=120' },
+      headers: { 'Cache-Control': 'no-store, must-revalidate' },
     })
   } catch (e) {
     console.error(e)

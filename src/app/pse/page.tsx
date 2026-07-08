@@ -24,6 +24,14 @@ export default async function PsePage({ searchParams }: Props) {
   const missing = roster.map(e => e.nome).filter(n => !pseSet.has(normName(n)))
   const pct     = roster.length ? Math.round((pseRows.length / roster.length) * 100) : 0
 
+  const sortedRoster = [...roster].sort((a, b) => {
+    const respondeuA = pseSet.has(normName(a.nome))
+    const respondeuB = pseSet.has(normName(b.nome))
+    if (respondeuA && !respondeuB) return -1
+    if (!respondeuA && respondeuB) return 1
+    return a.nome.localeCompare(b.nome, 'pt-BR')
+  })
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-end flex-wrap gap-2">
@@ -48,7 +56,7 @@ export default async function PsePage({ searchParams }: Props) {
               </tr>
             </thead>
             <tbody>
-              {roster.map(({ nome }) => {
+              {sortedRoster.map(({ nome }) => {
                 const row = pseRows.find(r => normName(r.atleta) === normName(nome))
                 return (
                   <tr key={nome} className="border-t border-black/6">

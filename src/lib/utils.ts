@@ -22,14 +22,42 @@ export function fmt(v: number | null, decimals = 1): string {
   return v.toFixed(decimals).replace('.', ',')
 }
 
+export function getTodayBrStr(): string {
+  const now = new Date()
+  const formatter = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+  return formatter.format(now) // "22/06/2026"
+}
+
+export function getTodaySpKey(): string {
+  const now = new Date()
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+  return formatter.format(now) // "2026-06-22"
+}
+
 export function lastNDaysKeys(n: number): string[] {
   const out: string[] = []
-  const today = new Date()
-  today.setHours(12, 0, 0, 0)
+  const spKey = getTodaySpKey()
+  const [year, month, day] = spKey.split('-').map(Number)
+  
+  // Cria a data local representando o meio-dia no dia de São Paulo
+  const today = new Date(year, month - 1, day, 12, 0, 0, 0)
   for (let i = 0; i < n; i++) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
-    out.push(d.toISOString().slice(0, 10))
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const dateDay = String(d.getDate()).padStart(2, '0')
+    out.push(`${y}-${m}-${dateDay}`)
   }
   return out.reverse()
 }

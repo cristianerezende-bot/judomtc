@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { getRoster, getRecHoje } from '@/lib/sheets'
 import { normName } from '@/lib/utils'
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const missingToday = roster.map(e => e.nome).filter(n => !recSet.has(normName(n)))
     return NextResponse.json(
       { rosterCount: roster.length, rowsToday: recRows, missingToday },
-      { headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=120' } }
+      { headers: { 'Cache-Control': 'no-store, must-revalidate' } }
     )
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 })
