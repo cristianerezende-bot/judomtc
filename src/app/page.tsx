@@ -60,7 +60,7 @@ export default async function HomePage({ searchParams }: Props) {
           <DonutChart percent={psePct} label="PSE" variant={psePct < 70 ? 'rose' : 'emerald'} />
         </div>
         <div className="card p-4">
-          <p className="text-xs font-black text-slate-500 mb-2">Radar · Perfil Bio-Psicossocial</p>
+          <p className="text-xs font-black text-slate-500 mb-2">Radar</p>
           <RadarChart values={data.radar} />
         </div>
       </div>

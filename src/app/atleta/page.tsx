@@ -5,9 +5,8 @@ import AthleteTimeline from '@/components/AthleteTimeline'
 import StatusBadge from '@/components/StatusBadge'
 import type { AthleteReport } from '@/types'
 import { fmt, getACWRStatus } from '@/lib/utils'
-import { TrendingUp, AlertCircle, Activity, Heart } from 'lucide-react'
+import { TrendingUp, Activity, Heart } from 'lucide-react'
 
-import TrendChart from '@/components/TrendChart'
 import BarChart from '@/components/BarChart'
 import RadarChart from '@/components/RadarChart'
 
@@ -89,23 +88,7 @@ export default function AtletaPage() {
       {!loading && report && (
         <>
           {/* TOP CARDS: EXECUTIVE SUMMARY */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-             <div className="card p-5 bg-white border-t-4 border-t-[#D6B25E]">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prontidão (IP 4.0)</span>
-                <div className="flex items-end gap-2 mt-1">
-                  <div className="text-4xl font-black text-[#0B1220]">{lastRow?.readiness ?? '—'}%</div>
-                  <div className="mb-1">
-                    <StatusBadge 
-                      cls={(lastRow?.readiness || 0) < 50 ? 'bad' : (lastRow?.readiness || 0) < 75 ? 'mid' : 'good'} 
-                      label=""
-                    />
-                  </div>
-                </div>
-                <div className="mt-3 text-[10px] font-bold text-slate-400 flex items-center gap-1">
-                  <Activity size={10} /> Status: {(lastRow?.readiness || 0) < 50 ? 'Risco Elevado' : (lastRow?.readiness || 0) < 75 ? 'Atenção' : 'Excelente'}
-                </div>
-             </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
              <div className="card p-5 bg-white border-t-4 border-t-emerald-500">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Carga (ACWR)</span>
                 <div className="flex items-end gap-2 mt-1">
@@ -146,16 +129,6 @@ export default function AtletaPage() {
               <div className="card p-6 bg-white">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="font-black text-sm uppercase tracking-wider text-slate-600 flex items-center gap-2">
-                    <TrendingUp size={16} className="text-[#D6B25E]" />
-                    Evolução da Prontidão (Últimos 14 Dias)
-                  </h3>
-                </div>
-                <TrendChart data={report.rows} dataKey="readiness" label="Prontidão" />
-              </div>
-
-              <div className="card p-6 bg-white">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-black text-sm uppercase tracking-wider text-slate-600 flex items-center gap-2">
                     <Activity size={16} className="text-blue-500" />
                     Carga Interna Diária (UA)
                   </h3>
@@ -193,15 +166,6 @@ export default function AtletaPage() {
                     <span className="font-bold text-slate-500">PSE Treino</span>
                     <span className="font-black text-[#0B1220]">{ad?.pse7Ok} / 7 dias</span>
                   </div>
-                  <div className="pt-2 border-t border-slate-100">
-                    <div className="flex items-center gap-2 text-red-500">
-                      <AlertCircle size={14} />
-                      <span className="text-[10px] font-black uppercase">Alertas Ativos</span>
-                    </div>
-                    <p className="text-[10px] font-bold text-slate-400 mt-1">
-                      {lastRow?.dor && lastRow.dor > 3 ? `Relatou dor nível ${lastRow.dor} em ${lastRow.localDor}` : 'Nenhum alerta crítico de dor hoje.'}
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -211,21 +175,12 @@ export default function AtletaPage() {
           <div className="card overflow-hidden">
             <div className="px-6 py-4 bg-slate-50 border-b border-black/5 flex justify-between items-center">
                <span className="font-black text-sm uppercase tracking-wider text-slate-600">Log de Monitoramento Detalhado</span>
-               <div className="flex gap-2">
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Pronto
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div> Risco
-                  </div>
-               </div>
             </div>
             <div className="overflow-x-auto text-[11px]">
               <table className="w-full">
                 <thead>
                   <tr className="bg-white border-b border-black/5 text-slate-400 text-left uppercase tracking-tighter">
                     <th className="px-6 py-3 font-black">Data</th>
-                    <th className="px-6 py-3 font-black text-center">Prontidão</th>
                     <th className="px-6 py-3 font-black text-center">ACWR</th>
                     <th className="px-6 py-3 font-black text-center">PSR</th>
                     <th className="px-6 py-3 font-black text-center">Sono</th>
@@ -238,12 +193,6 @@ export default function AtletaPage() {
                   {[...report.rows].reverse().map(r => (
                     <tr key={r.dayKey} className="border-b border-black/5 hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-3 font-black text-[#0B1220]">{r.dayBr}</td>
-                      <td className="px-6 py-3 text-center">
-                        <span className={`px-2 py-1 rounded-md font-black text-white text-[10px]
-                          ${(r.readiness || 0) < 50 ? 'bg-red-500 shadow-sm shadow-red-200' : (r.readiness || 0) < 75 ? 'bg-amber-400' : 'bg-emerald-500'}`}>
-                          {r.readiness || '—'}%
-                        </span>
-                      </td>
                       <td className="px-6 py-3 text-center font-bold text-slate-600">{fmt(r.ac, 2)}</td>
                       <td className="px-6 py-3 text-center text-slate-500">{r.psr ?? '—'}</td>
                       <td className="px-6 py-3 text-center text-slate-500">{r.sono ?? '—'}</td>
