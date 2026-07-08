@@ -2,12 +2,10 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AthleteTimeline from '@/components/AthleteTimeline'
-import StatusBadge from '@/components/StatusBadge'
 import type { AthleteReport } from '@/types'
-import { fmt, getACWRStatus } from '@/lib/utils'
-import { TrendingUp, Activity, Heart } from 'lucide-react'
+import { Activity, Heart } from 'lucide-react'
 
-import BarChart from '@/components/BarChart'
+import ResponseChart from '@/components/ResponseChart'
 import RadarChart from '@/components/RadarChart'
 
 export default function AtletaPage() {
@@ -88,37 +86,26 @@ export default function AtletaPage() {
       {!loading && report && (
         <>
           {/* TOP CARDS: EXECUTIVE SUMMARY */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-             <div className="card p-5 bg-white border-t-4 border-t-emerald-500">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Carga (ACWR)</span>
-                <div className="flex items-end gap-2 mt-1">
-                  <div className="text-4xl font-black text-[#0B1220]">{fmt(lastRow?.ac ?? null, 2)}</div>
-                  <TrendingUp size={18} className={getACWRStatus(lastRow?.ac ?? null) === 'good' ? 'text-emerald-500' : 'text-amber-500'} />
-                </div>
-                <div className="mt-3">
-                  <StatusBadge 
-                    cls={getACWRStatus(lastRow?.ac ?? null)} 
-                    label={getACWRStatus(lastRow?.ac ?? null) === 'good' ? 'Zona Ideal (Safe)' : 'Revisar Volume'}
-                  />
-                </div>
-             </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto w-full">
              <div className="card p-5 bg-white border-t-4 border-t-blue-500">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Adesão (14 Dias)</span>
-                <div className="text-4xl font-black text-[#0B1220] mt-1">{ad?.rec14Pct}%</div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Respostas REC (14 Dias)</span>
+                <div className="text-4xl font-black text-[#0B1220] mt-1">{ad?.rec14Ok} / 14</div>
                 <div className="mt-3 flex items-center justify-between">
                    <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden mr-2">
                       <div className="h-full bg-blue-500 rounded-full" style={{ width: `${ad?.rec14Pct}%` }}></div>
                    </div>
-                   <span className="text-[10px] font-black text-blue-500">{ad?.rec14Pct >= 90 ? 'META OK' : 'BAIXA'}</span>
+                   <span className="text-[10px] font-black text-blue-500">{ad?.rec14Pct}%</span>
                 </div>
              </div>
 
              <div className="card p-5 bg-white border-t-4 border-t-purple-500">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Carga Acumulada</span>
-                <div className="text-4xl font-black text-[#0B1220] mt-1">{Math.round(lastRow?.workload || 0)}</div>
-                <div className="mt-3 text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase">
-                  <Activity size={10} /> Unidades Arbitrárias
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Respostas PSE (14 Dias)</span>
+                <div className="text-4xl font-black text-[#0B1220] mt-1">{ad?.pse14Ok} / 14</div>
+                <div className="mt-3 flex items-center justify-between">
+                   <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden mr-2">
+                      <div className="h-full bg-purple-500 rounded-full" style={{ width: `${ad?.pse14Pct}%` }}></div>
+                   </div>
+                   <span className="text-[10px] font-black text-purple-500">{ad?.pse14Pct}%</span>
                 </div>
              </div>
           </div>
@@ -130,10 +117,10 @@ export default function AtletaPage() {
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="font-black text-sm uppercase tracking-wider text-slate-600 flex items-center gap-2">
                     <Activity size={16} className="text-blue-500" />
-                    Carga Interna Diária (UA)
+                    Respostas do Atleta (Últimos 14 Dias)
                   </h3>
                 </div>
-                <BarChart data={report.rows} dataKey="workload" label="Carga" />
+                <ResponseChart data={report.rows} />
               </div>
             </div>
 
@@ -181,24 +168,24 @@ export default function AtletaPage() {
                 <thead>
                   <tr className="bg-white border-b border-black/5 text-slate-400 text-left uppercase tracking-tighter">
                     <th className="px-6 py-3 font-black">Data</th>
-                    <th className="px-6 py-3 font-black text-center">ACWR</th>
                     <th className="px-6 py-3 font-black text-center">PSR</th>
                     <th className="px-6 py-3 font-black text-center">Sono</th>
                     <th className="px-6 py-3 font-black text-center">Fadiga</th>
                     <th className="px-6 py-3 font-black text-center">Dor</th>
-                    <th className="px-6 py-3 font-black text-center">Carga (UA)</th>
+                    <th className="px-6 py-3 font-black text-center">PSE Manhã</th>
+                    <th className="px-6 py-3 font-black text-center">PSE Tarde</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[...report.rows].reverse().map(r => (
                     <tr key={r.dayKey} className="border-b border-black/5 hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-3 font-black text-[#0B1220]">{r.dayBr}</td>
-                      <td className="px-6 py-3 text-center font-bold text-slate-600">{fmt(r.ac, 2)}</td>
                       <td className="px-6 py-3 text-center text-slate-500">{r.psr ?? '—'}</td>
                       <td className="px-6 py-3 text-center text-slate-500">{r.sono ?? '—'}</td>
                       <td className="px-6 py-3 text-center text-slate-500">{r.fadiga ?? '—'}</td>
                       <td className={`px-6 py-3 text-center font-black ${(r.dor || 0) > 3 ? 'text-red-500' : 'text-slate-400'}`}>{r.dor ?? '—'}</td>
-                      <td className="px-6 py-3 text-center font-bold text-purple-600">{Math.round(r.workload || 0)}</td>
+                      <td className="px-6 py-3 text-center font-bold text-purple-600">{r.pseM ?? '—'}</td>
+                      <td className="px-6 py-3 text-center font-bold text-purple-600">{r.pseT ?? '—'}</td>
                     </tr>
                   ))}
                 </tbody>
