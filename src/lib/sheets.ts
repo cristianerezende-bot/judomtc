@@ -16,6 +16,17 @@ function getAuth() {
 const SS_PRIMARY = process.env.CACHE_SPREADSHEET_ID!
 const SS_SECONDARY = process.env.SECONDARY_SPREADSHEET_ID!
 
+const SHEETS_READ_TIMEOUT_MS = 12000
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout de ${ms}ms ao ler ${label}`)), ms)
+    ),
+  ])
+}
+
 function normH(h: string) {
   return h.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toUpperCase().replace(/[\s_]+/g, '_')
@@ -49,10 +60,14 @@ async function readSpreadsheetBatch(spreadsheetId: string): Promise<SpreadsheetD
   const tabs = ['CACHE_ROSTER', 'CACHE_REC_HOJE', 'CACHE_PSE_HOJE', 'CACHE_ATLETA_HIST_30D', 'CACHE_HOME']
   try {
     const sheets = google.sheets({ version: 'v4', auth: getAuth() })
-    const res = await sheets.spreadsheets.values.batchGet({
-      spreadsheetId,
-      ranges: tabs
-    })
+    const res = await withTimeout(
+      sheets.spreadsheets.values.batchGet({
+        spreadsheetId,
+        ranges: tabs
+      }),
+      SHEETS_READ_TIMEOUT_MS,
+      `spreadsheet ${spreadsheetId}`
+    )
     const valueRanges = res.data.valueRanges ?? []
     
     function parseRange(values: string[][] | undefined | null): SheetData {

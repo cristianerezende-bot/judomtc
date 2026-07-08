@@ -64,7 +64,6 @@ function ShellInner({ children }: { children: React.ReactNode }) {
                   </span>
                 )}
               </div>
-              <div className="text-xs font-bold opacity-75 mt-0.5 text-white">Alto Rendimento • MTC</div>
             </div>
           </div>
           <button

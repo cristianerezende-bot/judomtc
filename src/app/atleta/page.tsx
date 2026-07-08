@@ -6,13 +6,13 @@ import type { AthleteReport } from '@/types'
 import { Activity, Heart } from 'lucide-react'
 
 import ResponseChart from '@/components/ResponseChart'
-import RadarChart from '@/components/RadarChart'
 
 export default function AtletaPage() {
   const searchParams = useSearchParams()
   const categoria = searchParams.get('categoria') ?? ''
 
   const [roster, setRoster]   = useState<string[]>([])
+  const [rosterError, setRosterError] = useState(false)
   const [selected, setSelected] = useState('')
   const [report, setReport]   = useState<AthleteReport | null>(null)
   const [loading, setLoading] = useState(false)
@@ -21,7 +21,9 @@ export default function AtletaPage() {
     const url = categoria
       ? `/api/rec?categoria=${encodeURIComponent(categoria)}`
       : '/api/rec'
+    setRosterError(false)
     fetch(url).then(r => r.json()).then(d => {
+      if (d?.error) throw new Error(d.error)
       const names = [
         ...new Set([
           ...(d.rowsToday ?? []).map((r: {atleta:string}) => r.atleta),
@@ -30,7 +32,7 @@ export default function AtletaPage() {
       ].sort((a: string, b: string) => a.localeCompare(b, 'pt-BR'))
       setRoster(names)
       setSelected(prev => prev || names[0] || '')
-    })
+    }).catch(() => setRosterError(true))
   }, [categoria])
 
   useEffect(() => {
@@ -43,16 +45,6 @@ export default function AtletaPage() {
   }, [selected])
 
   const ad = report?.adherence
-  const lastRow = report?.rows.at(-1)
-  
-  // Radar data do atleta selecionado
-  const individualRadar = lastRow ? [
-    lastRow.sono ?? 0,
-    lastRow.stress ?? 0,
-    lastRow.fadiga ?? 0,
-    lastRow.dor ?? 0,
-    lastRow.humor ?? 0
-  ] : [0,0,0,0,0]
 
   return (
     <div className="space-y-6">
@@ -69,10 +61,16 @@ export default function AtletaPage() {
         </div>
         <div className="flex-1 min-w-48">
           <label className="text-[10px] font-black text-slate-400 uppercase">Selecione o Atleta</label>
-          <select value={selected} onChange={e => setSelected(e.target.value)}
-            className="w-full border-none p-0 text-lg font-black bg-transparent outline-none cursor-pointer text-[#0B1220]">
-            {roster.map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
+          {rosterError ? (
+            <div className="text-sm font-black text-red-500">
+              Erro ao carregar a lista de atletas. Tente novamente em instantes.
+            </div>
+          ) : (
+            <select value={selected} onChange={e => setSelected(e.target.value)}
+              className="w-full border-none p-0 text-lg font-black bg-transparent outline-none cursor-pointer text-[#0B1220]">
+              {roster.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          )}
         </div>
       </div>
 
@@ -86,7 +84,7 @@ export default function AtletaPage() {
       {!loading && report && (
         <>
           {/* TOP CARDS: EXECUTIVE SUMMARY */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto w-full">
              <div className="card p-5 bg-white border-t-4 border-t-blue-500">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Respostas REC (14 Dias)</span>
                 <div className="text-4xl font-black text-[#0B1220] mt-1">{ad?.rec14Ok} / 14</div>
@@ -108,43 +106,10 @@ export default function AtletaPage() {
                    <span className="text-[10px] font-black text-purple-500">{ad?.pse14Pct}%</span>
                 </div>
              </div>
-          </div>
 
-          {/* VISUALIZAÇÃO DE TENDÊNCIAS */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="card p-6 bg-white">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-black text-sm uppercase tracking-wider text-slate-600 flex items-center gap-2">
-                    <Activity size={16} className="text-blue-500" />
-                    Respostas do Atleta (Últimos 14 Dias)
-                  </h3>
-                </div>
-                <ResponseChart data={report.rows} />
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="card p-6 bg-[#0B1220] text-white flex flex-col items-center">
-                <h3 className="font-black text-sm uppercase tracking-wider mb-6 text-slate-400 self-start">
-                  Radar de Bem-Estar
-                </h3>
-                <div className="w-full aspect-square">
-                  <RadarChart values={individualRadar} />
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 w-full text-[10px] font-black uppercase text-slate-400">
-                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Sono</div>
-                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Stress</div>
-                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Fadiga</div>
-                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500"></div> Dor</div>
-                </div>
-              </div>
-              
-              <div className="card p-6 bg-white">
-                <h3 className="font-black text-sm uppercase tracking-wider text-slate-600 mb-4">
-                  Check-in Semanal
-                </h3>
-                <div className="space-y-4">
+             <div className="card p-5 bg-white border-t-4 border-t-amber-500">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Check-in Semanal</span>
+                <div className="mt-2 space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold text-slate-500">Recuperação</span>
                     <span className="font-black text-[#0B1220]">{ad?.rec7Ok} / 7 dias</span>
@@ -154,8 +119,18 @@ export default function AtletaPage() {
                     <span className="font-black text-[#0B1220]">{ad?.pse7Ok} / 7 dias</span>
                   </div>
                 </div>
-              </div>
+             </div>
+          </div>
+
+          {/* VISUALIZAÇÃO DE TENDÊNCIAS */}
+          <div className="card p-6 bg-white">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-black text-sm uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                <Activity size={16} className="text-blue-500" />
+                Respostas do Atleta (Últimos 14 Dias)
+              </h3>
             </div>
+            <ResponseChart data={report.rows} />
           </div>
 
           {/* TABELA DETALHADA NO FINAL */}

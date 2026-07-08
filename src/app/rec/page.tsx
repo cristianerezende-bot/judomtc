@@ -43,7 +43,7 @@ export default async function RecPage({ searchParams }: Props) {
         <span className="pill">Respondido: {pct}%</span>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: 'Respondidos', value: recRows.length },
           { label: 'Faltantes',   value: missing.length },
@@ -57,33 +57,35 @@ export default async function RecPage({ searchParams }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div className="lg:col-span-2 card overflow-auto">
+        <div className="lg:col-span-2 card">
           <div className="px-4 py-3 bg-black/3 border-b border-black/8 font-black text-sm">
             Quem respondeu
           </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-black/3">
-                {['Atleta','PSR','BE','Dor','Fadiga','Estresse','Humor','Sono'].map(h => (
-                  <th key={h} className="px-3 py-2.5 text-left font-black text-slate-600">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {recRows.map(r => (
-                <tr key={r.atleta} className="border-t border-black/6">
-                  <td className="px-3 py-2 font-black">{r.atleta}</td>
-                  <td className="px-3 py-2"><StatusBadge cls={clsPSR(r.psr)}   label={fv(r.psr)}    /></td>
-                  <td className="px-3 py-2"><StatusBadge cls={clsBE(r.be)}     label={fv(r.be)}     /></td>
-                  <td className="px-3 py-2"><StatusBadge cls={cls05(r.dor)}    label={fv(r.dor)}    /></td>
-                  <td className="px-3 py-2"><StatusBadge cls={cls05(r.fadiga)} label={fv(r.fadiga)} /></td>
-                  <td className="px-3 py-2"><StatusBadge cls={cls05(r.stress)} label={fv(r.stress)} /></td>
-                  <td className="px-3 py-2"><StatusBadge cls={cls05(r.humor)}  label={fv(r.humor)}  /></td>
-                  <td className="px-3 py-2"><StatusBadge cls={cls05(r.sono)}   label={fv(r.sono)}   /></td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-black/3">
+                  {['Atleta','PSR','BE','Dor','Fadiga','Estresse','Humor','Sono'].map(h => (
+                    <th key={h} className="px-3 py-2.5 text-left font-black text-slate-600 whitespace-nowrap">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recRows.map(r => (
+                  <tr key={r.atleta} className="border-t border-black/6">
+                    <td className="px-3 py-2 font-black whitespace-nowrap">{r.atleta}</td>
+                    <td className="px-3 py-2"><StatusBadge cls={clsPSR(r.psr)}   label={fv(r.psr)}    /></td>
+                    <td className="px-3 py-2"><StatusBadge cls={clsBE(r.be)}     label={fv(r.be)}     /></td>
+                    <td className="px-3 py-2"><StatusBadge cls={cls05(r.dor)}    label={fv(r.dor)}    /></td>
+                    <td className="px-3 py-2"><StatusBadge cls={cls05(r.fadiga)} label={fv(r.fadiga)} /></td>
+                    <td className="px-3 py-2"><StatusBadge cls={cls05(r.stress)} label={fv(r.stress)} /></td>
+                    <td className="px-3 py-2"><StatusBadge cls={cls05(r.humor)}  label={fv(r.humor)}  /></td>
+                    <td className="px-3 py-2"><StatusBadge cls={cls05(r.sono)}   label={fv(r.sono)}   /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
         <MissingTable names={missing} title="Faltantes · REC" />
       </div>

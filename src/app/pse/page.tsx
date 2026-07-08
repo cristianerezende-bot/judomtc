@@ -43,37 +43,39 @@ export default async function PsePage({ searchParams }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div className="lg:col-span-2 card overflow-auto">
+        <div className="lg:col-span-2 card">
           <div className="px-4 py-3 bg-black/3 border-b border-black/8 font-black text-sm">
             PSE por atleta
           </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-black/3">
-                {['Atleta','PSE Manhã','PSE Tarde'].map(h => (
-                  <th key={h} className="px-3 py-2.5 text-left font-black text-slate-600">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sortedRoster.map(({ nome }) => {
-                const row = pseRows.find(r => normName(r.atleta) === normName(nome))
-                return (
-                  <tr key={nome} className="border-t border-black/6">
-                    <td className="px-3 py-2 font-black">{nome}</td>
-                    <td className="px-3 py-2">
-                      <StatusBadge cls={clsPSE(row?.pseManha ?? null)}
-                        label={row?.pseManha != null ? String(Math.round(row.pseManha)) : '—'} />
-                    </td>
-                    <td className="px-3 py-2">
-                      <StatusBadge cls={clsPSE(row?.pseTarde ?? null)}
-                        label={row?.pseTarde != null ? String(Math.round(row.pseTarde)) : '—'} />
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-black/3">
+                  {['Atleta','PSE Manhã','PSE Tarde'].map(h => (
+                    <th key={h} className="px-3 py-2.5 text-left font-black text-slate-600 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sortedRoster.map(({ nome }) => {
+                  const row = pseRows.find(r => normName(r.atleta) === normName(nome))
+                  return (
+                    <tr key={nome} className="border-t border-black/6">
+                      <td className="px-3 py-2 font-black whitespace-nowrap">{nome}</td>
+                      <td className="px-3 py-2">
+                        <StatusBadge cls={clsPSE(row?.pseManha ?? null)}
+                          label={row?.pseManha != null ? String(Math.round(row.pseManha)) : '—'} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <StatusBadge cls={clsPSE(row?.pseTarde ?? null)}
+                          label={row?.pseTarde != null ? String(Math.round(row.pseTarde)) : '—'} />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
         <MissingTable names={missing} title="Faltantes · PSE" />
       </div>
