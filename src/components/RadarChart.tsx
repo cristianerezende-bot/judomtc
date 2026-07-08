@@ -12,7 +12,7 @@ export default function RadarChartComponent({ values }: Props) {
   const data = LABELS.map((label, i) => ({ label, value: values[i] ?? 0 }))
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <RadarChart data={data}>
+      <RadarChart data={data} innerRadius="8%">
         <PolarGrid stroke="rgba(15,23,42,.12)" />
         <PolarAngleAxis dataKey="label"
           tick={{ fontSize: 12, fontWeight: 700, fill: '#64748b' }} />
