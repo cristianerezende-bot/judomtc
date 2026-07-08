@@ -16,7 +16,12 @@ export default function RadarChartComponent({ values }: Props) {
         <PolarGrid stroke="rgba(15,23,42,.12)" />
         <PolarAngleAxis dataKey="label"
           tick={{ fontSize: 12, fontWeight: 700, fill: '#64748b' }} />
-        <PolarRadiusAxis domain={[0, 5]} tick={false} axisLine={false} />
+        <PolarRadiusAxis
+          domain={[0, 5]}
+          tickCount={6}
+          axisLine={false}
+          tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }}
+        />
         <Radar name="Prontidão" dataKey="value"
           stroke="#D6B25E" fill="#D6B25E" fillOpacity={0.25} strokeWidth={2} />
         <Tooltip formatter={(v: number) => v.toFixed(1)} />
